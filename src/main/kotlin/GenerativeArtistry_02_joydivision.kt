@@ -26,8 +26,6 @@ import java.lang.Math.abs
 import java.lang.Math.max
 import kotlin.random.Random
 
-const val NUMLINES = 25
-const val NUMPOINTS = 30
 
 fun main() = application {
     configure {
@@ -41,6 +39,8 @@ fun main() = application {
 
     oliveProgram {
 
+        val NUMLINES = 25
+        val NUMPOINTS = 30
         val rand = Random(0)
         val linePoints = (0..NUMLINES).map{line->
             (0..NUMPOINTS).map{step->
