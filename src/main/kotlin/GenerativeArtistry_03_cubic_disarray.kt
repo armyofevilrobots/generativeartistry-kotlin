@@ -40,8 +40,6 @@ fun main() = application {
 
 
     oliveProgram {
-        val BREADTH = 9
-        val margin=40
 
         val gui = GUI()
 
@@ -62,16 +60,19 @@ fun main() = application {
             @DoubleParameter("SpinMax", 1.0, 720.0)
             var SpinMax = 45.0
 
+            @IntParameter("Breadth", 9, 20)
+            var breadth = 9
+
+
         }.addTo(gui, "Configuration")
 
 
         extend {
             val wide = width-(2*settings.margin)
             val high = wide
-            val rectsize = (wide/BREADTH).toDouble()
+            val rectsize = (wide/settings.breadth).toDouble()
             val rand = Random(settings.seed)
             val jittermax=rectsize/2
-            println("widt is ${wide}")
             drawer.clear(ColorRGBa.WHITE)
             drawer.strokeWeight = settings.stroke
             drawer.stroke = ColorRGBa.BLACK
@@ -80,11 +81,11 @@ fun main() = application {
             drawer.view*=transform{
                 translate(settings.margin*1.0, settings.margin*1.0)
             }
-            for(yb in 0..(BREADTH-1)){
-                for(xb in 0..(BREADTH-1)){
-                    val rot = (rand.nextFloat()-0.5)*(yb*settings.SpinMax/BREADTH)
-                    val shiftx = (rand.nextFloat()-0.5)*(yb*settings.jittermax/BREADTH)
-                    val shifty = (rand.nextFloat()-0.5)*(yb*settings.jittermax/BREADTH)
+            for(yb in 0..(settings.breadth-1)){
+                for(xb in 0..(settings.breadth-1)){
+                    val rot = (rand.nextFloat()-0.5)*(yb*settings.SpinMax/settings.breadth)
+                    val shiftx = (rand.nextFloat()-0.5)*(yb*settings.jittermax/settings.breadth)
+                    val shifty = (rand.nextFloat()-0.5)*(yb*settings.jittermax/settings.breadth)
                     drawer.pushView()
                     drawer.view *= transform{
                         translate(Vector2(rectsize*xb+rectsize/2, rectsize*yb+rectsize/2))
