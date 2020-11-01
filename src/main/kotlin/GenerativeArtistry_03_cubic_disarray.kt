@@ -76,7 +76,7 @@ fun main() = application {
             drawer.clear(ColorRGBa.WHITE)
             drawer.strokeWeight = settings.stroke
             drawer.stroke = ColorRGBa.BLACK
-            drawer.fill = ColorRGBa.WHITE
+            drawer.fill = ColorRGBa.TRANSPARENT
 
             drawer.view*=transform{
                 translate(settings.margin*1.0, settings.margin*1.0)
@@ -85,12 +85,12 @@ fun main() = application {
                 for(xb in 0..(settings.breadth-1)){
                     val rot = (rand.nextFloat()-0.5)*(yb*settings.SpinMax/settings.breadth)
                     val shiftx = (rand.nextFloat()-0.5)*(yb*settings.jittermax/settings.breadth)
-                    val shifty = (rand.nextFloat()-0.5)*(yb*settings.jittermax/settings.breadth)
+                    val shifty = 0.0//(rand.nextFloat()-0.5)*(yb*settings.jittermax/settings.breadth)
                     drawer.pushView()
                     drawer.view *= transform{
+                        translate(Vector2(shiftx, shifty))
                         translate(Vector2(rectsize*xb+rectsize/2, rectsize*yb+rectsize/2))
                         rotate(Vector3(0.0,0.0, 1.0), rot)
-                        translate(Vector2(shiftx, shifty))
                     }
                     drawer.rectangle(-rectsize/2, -rectsize/2, rectsize, rectsize)
                     drawer.popView()
