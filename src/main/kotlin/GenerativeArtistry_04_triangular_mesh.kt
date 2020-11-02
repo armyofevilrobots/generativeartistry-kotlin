@@ -54,12 +54,9 @@ fun main() = application {
             var margin = 90
 
             @DoubleParameter("JitterMax", 1.0, 300.0)
-            var jittermax = 100.0
+            var jittermax = 45.0
 
-            @DoubleParameter("SpinMax", 1.0, 720.0)
-            var SpinMax = 45.0
-
-            @IntParameter("Breadth", 9, 20)
+            @IntParameter("Breadth", 5, 30)
             var breadth = 9
 
 
@@ -67,17 +64,18 @@ fun main() = application {
 
         extend {
             // Like the rest of these things, we need a random number generator
-            val rand = Random(0)
+            val rand = Random(settings.seed)
             val lines = mutableListOf<MutableList<Vector2>>()
-            val size = width-(2*settings.margin)
+            val size = width-(2.0*settings.margin)
             val rectsize = (size/settings.breadth).toDouble()
             // Let's setup some nice defaults for fill/stroke/color/etc.
             drawer.clear(ColorRGBa.WHITE)
             drawer.strokeWeight = settings.stroke
             drawer.stroke = ColorRGBa.BLACK
             drawer.fill = ColorRGBa.TRANSPARENT
-
-
+            // If we don't round off the corners, those overlapping triangles look spiky.
+            drawer.lineCap = LineCap.ROUND
+            drawer.lineJoin = LineJoin.ROUND
 
             // Once I get to a certain level of complexity, I find it really useful to
             // 'rubber duck' my plans for an algorithm into plain text. It makes it
@@ -88,8 +86,8 @@ fun main() = application {
             // Before we do anything else, translate the entire drawing in the view, instead
             // of adding offsets to the coords. Makes it easier to reason about, and keeps
             // the cruft out of our actual design
-            drawer.view*= transform{
-                translate(settings.margin*1.0, settings.margin*1.0)
+            drawer.view *= transform{
+                translate(settings.margin*1.25, settings.margin*1.25)
             }
 
             // These triangles can be mentally modelled as a bunch of rows of squares,
@@ -99,9 +97,11 @@ fun main() = application {
             // We've got the same config from the cubic disarray, because of how funamentally similar
             // these art pieces are, so we use those settings.
             for (yc in 0..(settings.breadth - 1)) {
-                lines.add(((0..settings.breadth-1).map{ xc -> Vector2(xc*rectsize, yc*rectsize) }).toMutableList())
+                lines.add(((0..settings.breadth-1).map{ xc ->
+                    Vector2(xc*rectsize, yc*rectsize) }).toMutableList())
             }
             // ... we'll temporarily draw dots at those vertices to verify that it looks right.
+
             /*
             for(line in lines)
                 for(point in line) {
@@ -116,16 +116,15 @@ fun main() = application {
                 if(lineidx % 2 == 1){
                     val line = lines[lineidx]
                     for(colidx in 0..(line.count()-1))
+//                        println()
                         line[colidx] = Vector2(line[colidx].x+rectsize/2.0, line[colidx].y)
                 }
-
-
 
             for(line in lines) {
                 val iter = line.listIterator()
                 while(iter.hasNext()){
                     val item = iter.next()
-                    iter.set(Vector2(item.x+rand.nextFloat()*settings.jittermax, item.y+rand.nextFloat()*settings.jittermax))
+                    iter.set(Vector2(item.x+rand.nextFloat()*settings.jittermax-settings.jittermax/2.0, item.y+rand.nextFloat()*settings.jittermax-settings.jittermax/2.0))
                 }
             }
 
@@ -139,32 +138,59 @@ fun main() = application {
             //
             // And we also need to alternate e every other line, so it's even triangles...
             //
+            //            --b--
+            //            |\  |
+            //            a e c
+            //            |  \|
+            //            ~~d~~
+            //
+            // Remember, we've shifted every other line DOWN, so those shifted triangles are now perfectly
+            // symmetrical (turn the jitter to zero if you don't believe me).
+            //
             // Once we 've done that^, we can go back and add a transformation to the lines to add the desired
             // amount of "skew" to get the even grid of triangles.
 
             for(xc in 0..(settings.breadth-2))
                 for(yc in 0..(settings.breadth-2)){
+                    // Setup those grays up front...
+                    val gray1 = (rand.nextInt(0,15) * 16)/256.0
+                    val gray2 = (rand.nextInt(0,15) * 16)/256.0
                     // Oooh look... we can draw this as a single strip!
                     if (yc % 2 == 0){
-                        drawer.lineStrip(
-                                listOf(lines[yc+1][xc], lines[yc][xc],
-                                        lines[yc][xc+1],
-                                        lines[yc+1][xc+1],
-                                        lines[yc+1][xc],
-                                        lines[yc][xc+1]
-                                ))
+                        val t1 = contour {
+                            moveTo(lines[yc+1][xc])
+                            lineTo(lines[yc][xc])
+                            lineTo(lines[yc][xc+1])
+                            close()
+                        }
+                        val t2 = contour {
+                            moveTo(lines[yc+1][xc])
+                            lineTo(lines[yc+1][xc+1])
+                            lineTo(lines[yc][xc+1])
+                            close()
+                        }
+                        drawer.fill = ColorRGBa(gray1,gray1, gray1, 1.0)
+                        drawer.contour(t1)
+                        drawer.fill = ColorRGBa(gray2,gray2, gray2, 1.0)
+                        drawer.contour(t2)
 
                     } else {
-                        drawer.lineStrip(
-                                listOf(
-                                        lines[yc+1][xc+1],
-                                        lines[yc][xc+1],
-                                        lines[yc][xc],
-                                        lines[yc+1][xc],
-                                        lines[yc+1][xc+1],
-                                        lines[yc][xc]
-                                ))
-
+                        val t1 = contour {
+                            moveTo(lines[yc+1][xc])
+                            lineTo(lines[yc+1][xc+1])
+                            lineTo(lines[yc][xc])
+                            close()
+                        }
+                        val t2 = contour {
+                            moveTo(lines[yc][xc])
+                            lineTo(lines[yc][xc+1])
+                            lineTo(lines[yc+1][xc+1])
+                            close()
+                        }
+                        drawer.fill = ColorRGBa(gray1,gray1, gray1, 1.0)
+                        drawer.contour(t1)
+                        drawer.fill = ColorRGBa(gray2,gray2, gray2, 1.0)
+                        drawer.contour(t2)
                     }
 
 
