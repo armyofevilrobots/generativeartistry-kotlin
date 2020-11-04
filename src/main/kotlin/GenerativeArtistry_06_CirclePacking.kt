@@ -38,9 +38,9 @@ fun main() = application {
     oliveProgram {
 
         val circles = mutableListOf<GenCircle>()
-        val rand = Random(0)
+        val rand = Random(System.currentTimeMillis())
 
-        val gui = GUI()
+//        val gui = GUI()
 
 
         extend {
